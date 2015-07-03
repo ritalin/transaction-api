@@ -2,6 +2,8 @@
 
 namespace TransactionApi;
 
+use TransactionApi\Annotation\Transactional;
+
 class TransactionScope
 {
     /**
@@ -23,20 +25,34 @@ class TransactionScope
     
     public function __construct(TransactionInterface $tran, Transactional $annotation) {
         $this->tran = $tran;
-        $This->txType = $annotation->txType;
+        $this->txType = $annotation->txType;
     }
     
+    /**
+     * @param callable fn ()->mixed
+     */
     public function runInto(callable $fn)
     {
         $this->tryBegin();
+        $saveDepth = $this->tran->depth();
         try {
             $result = $fn();
+            
+            if ($saveDepth !== $this->tran->depth()) {
+                throw new InvalidTransactionException('Transaction nest level is not matched.', -1001);
+            }
             
             $this->tran->commit();
             
             return $result;
-        }
-        catch (\Except $ex) {
+        } catch (\Exception $ex) {
+            if ($ex instanceof InvalidTransactionException) {
+                throw $ex;
+            }
+            if ($saveDepth !== $this->tran->depth()) {
+                throw new InvalidTransactionException('Transaction nest level is not matched.', -1001);
+            }
+            
             $this->tran->rollback();
             
             throw $ex;
@@ -49,14 +65,15 @@ class TransactionScope
         }
         else { 
             switch ($this->txType) {
-            case REQUIRES: break;
-            case REQUIRES_NEW: {
+            case self::REQUIRES: break;
+            case self::REQUIRES_NEW: {
                 $this->tran->begin();
                 break;
-            case REQUIRES_ONE: {
-                throw new InvalidTransactionException('Transaction has already been started.');
+            }
+            case self::REQUIRES_ONE: 
+                throw new InvalidTransactionException('Transaction has already been started.', -1002);
             default:
-                throw new InvalidTransactionException('Unknown transaction type');
+                throw new InvalidTransactionException('Unknown transaction type', -1003);
             }
         }
     }

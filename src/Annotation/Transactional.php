@@ -2,6 +2,8 @@
 
 namespace TransactionApi\Annotation;
 
+use TransactionApi\TransactionScope;
+
 /**
  * @Annotation
  * @Target("METHOD")
@@ -13,5 +15,5 @@ class Transactional
      *
      * @see TransactionScope
      */
-    public $txType;
+    public $txType = TransactionScope::REQUIRES_ONE;
 }
