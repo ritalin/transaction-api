@@ -50,7 +50,7 @@ class TransactionScope
                 throw $ex;
             }
             if ($saveDepth !== $this->tran->depth()) {
-                throw new InvalidTransactionException('Transaction nest level is not matched.', -1001);
+                throw new InvalidTransactionException('Transaction nest level is not matched.', -1001, $ex);
             }
             
             $this->tran->rollback();
