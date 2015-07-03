@@ -1,0 +1,28 @@
+{
+    "name": "ritalin/transaction-api",
+    "description": "Common transaction API",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Ritalin",
+            "homepage": "http://ritalin.github.io"
+        }
+    ],
+    "require": {
+        "php": ">=5.5.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "4.*"
+    },
+    "autoload": {
+        "psr-4": {
+            "TransactionApi\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": { 
+            "TransactionApi\\": "tests/"
+         }
+    }    
+}
