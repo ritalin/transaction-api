@@ -33,27 +33,40 @@ class TransactionScope
      */
     public function runInto(callable $fn)
     {
-        $this->tryBegin();
+        $started = $this->tryBegin();
         $saveDepth = $this->tran->depth();
         try {
             $result = $fn();
             
-            if ($saveDepth !== $this->tran->depth()) {
-                throw new InvalidTransactionException('Transaction nest level is not matched.', -1001);
+            $actualDepth = $this->tran->depth();
+            
+            if ($saveDepth !== $actualDepth) {
+                throw new InvalidTransactionException(
+                    "Transaction nest level is not matched (expected: $saveDepth, actual: $actualDepth)", -1001
+                );
             }
             
-            $this->tran->commit();
+            if ($started) {
+                $this->tran->commit();
+            }
             
             return $result;
         } catch (\Exception $ex) {
             if ($ex instanceof InvalidTransactionException) {
                 throw $ex;
             }
-            if ($saveDepth !== $this->tran->depth()) {
-                throw new InvalidTransactionException('Transaction nest level is not matched.', -1001, $ex);
+            
+            $actualDepth = $this->tran->depth();
+            
+            if ($saveDepth !== $actualDepth) {
+                throw new InvalidTransactionException(
+                    "Transaction nest level is not matched (expected: $saveDepth, actual: $actualDepth)", -1001
+                );
             }
             
-            $this->tran->rollback();
+            if ($started) {
+                $this->tran->rollback();
+            }
             
             throw $ex;
         }
@@ -62,13 +75,14 @@ class TransactionScope
     private function tryBegin() {
         if (! $this->tran->inTransaction()) {
             $this->tran->begin();
+            return true;
         }
         else { 
             switch ($this->txType) {
-            case self::REQUIRES: break;
+            case self::REQUIRES: return false;
             case self::REQUIRES_NEW: {
                 $this->tran->begin();
-                break;
+                return true;;
             }
             case self::REQUIRES_ONE: 
                 throw new InvalidTransactionException('Transaction has already been started.', -1002);
