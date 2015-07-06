@@ -1,6 +1,6 @@
 {
     "name": "ritalin/transaction-api",
-    "description": "Common transaction API",
+    "description": "Declarative transaction API",
     "type": "library",
     "license": "MIT",
     "authors": [
