@@ -11,7 +11,7 @@ use TransactionApi\TransactionScope;
 class Transactional
 {
     /**
-     * @var integer
+     * @var int
      *
      * @see TransactionScope
      */
